@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MOT Data</title>
+    <link href="https://bootswatch.com/cosmo/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke:black;
+            shape-rendering:crispEdge;
+        }
+        .axis text {
+            font-family: "Helvetica Neue", Helvetica, Arial;
+            font-size: 14px;
+        }
+        .tick {
+        }
+        .passRatePath {
+            stroke: #2ca25f;
+            stroke-width: 4px;
+            fill: none;
+        }
+        .countCol {
+            stroke: none;
+            stroke-width: 0px;
+            fill: darkred;
+        }
+        .histoCol {
+            stroke: none;
+            stroke-width: 0px;
+            fill: #2b8cbe;
+        }
+        .container-fluid {
+            max-width:1200px;
+        }
+        .jumbotron {
+            margin-bottom: 0px;
+            background-image: url(mot.jpg);
+            background-position: 0% 25%;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+    </style>
+</head>
+
+<body ng-app="motApp" ng-controller="MotController">
+    <div class="container-fluid">
+        <br/><br/>
+        <div class="jumbotron">
+            <h1>Dan's MOT Report</h1>
+            <p>
+                Source: <a href="https://data.gov.uk/dataset/anonymised_mot_test" target="_new">https://data.gov.uk/dataset/anonymised_mot_test</a>
+            </p>
+            <p>
+                Data from every MOT test performed from 2005 to 2013, totalling <strong>{{ recordCount }}</strong> rows.
+            </p>
+            <p><a class="btn btn-primary btn-lg" href="http://logicalgenetics.com">Learn more</a></p>
+        </div>
+        <div class="page-header">
+            <h1>MOT Pass Rate by Vehicle Age</h1>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Test counts by vehicle colour</h3>
+                <div style="height: 300px" category-bar-chart chart-data="colours" padding="40" col-class="histoCol" xfield="count" yfield="colour"></div>
+                <p>Number of tests for vehicles of various colours.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Pass rate histogram for cars aged up to 20 years</h3>
+                <div style="height: 300px" column-chart chart-data="passRate20" padding="40" col-class="histoCol" xfield="age" yfield="rate"></div>
+                <p>Pass rate (%) for vehicles of ages 0 - 20 years.  At around 15 years the pass rate reaches a minimum, implying that most cars don't make it to this age.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>Pass rate histogram for cars aged up to 100 years</h3>
+                <div style="height: 300px" column-chart chart-data="passRate100" padding="40" col-class="histoCol" xfield="age" yfield="rate"></div>
+                <p>Pass rate (%) for vehicles aged 0 to 100 years.  As cars get older, they are better cared for, their value increases and they are used less. This may be the cause of the higher pass rates. Note that the pass rate exceeds that for brand new cars somewhere around 60-70 years.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>MOT counts by age over first 20 years</h3>
+                <div style="height: 300px" column-chart chart-data="passRate20" padding="40" col-class="countCol" xfield="age" yfield="count"></div>
+                <p>Number of MOT test records for vehicles of ages 0 to 20 years. The MOT test is not mandatory for most vehicles until they are three years old.  Note that this doesn't equate to number of unique vehicles, as a failed vehicle is normally retested.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>MOT count CDF by age over first 20 years</h3>
+                <div style="height: 300px" line-chart chart-data="cdf20" padding="40" path-class="passRatePath" xfield="age" yfield="cdf"></div>
+                <p>Cumulative distribution of MOT tests for vehicles of ages 0 to 20 years. The MOT test is not mandatory for most vehicles until they are three years old.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>MOT counts by age over 100 years</h3>
+                <div style="height: 300px" column-chart chart-data="passRate100" padding="40" col-class="countCol" xfield="age" yfield="count"></div>
+                <p>Number of MOT test records for vehicles of ages 0 to 100 years. Note that this doesn't equate to number of unique vehicles, as a failed vehicle is normally retested.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>MOT count CDF by age over 100 years</h3>
+                <div style="height: 300px" line-chart chart-data="cdf100" padding="40" path-class="passRatePath" xfield="age" yfield="cdf"></div>
+                <p>Cumulative distribution of MOT tests for vehicles of ages 0 to 100 years.  The 95th percentile is somewhere around the 15 year mark..</p>
+            </div>
+        </div>
+
+    </div>
+
+    <br/><br/><br/><br/><br/>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="lineChart.js"></script>
+    <script src="columnChart.js"></script>
+    <script src="categoryBarChart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

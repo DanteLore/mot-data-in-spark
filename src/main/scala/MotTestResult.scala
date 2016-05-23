@@ -1,0 +1,15 @@
+case class MotTestResult(testId : Int,
+                         vehicleId : Int,
+                         date : String,
+                         testClass : String,
+                         testType : String,
+                         testResult : String,
+                         testMileage : Int,
+                         location : String,
+                         make : String,
+                         model : String,
+                         colour : String,
+                         fuelType : String,
+                         cylinderCapacity : Int,
+                         firstUseDate : String
+                      )
