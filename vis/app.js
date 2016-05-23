@@ -6,7 +6,7 @@ var createCdf = function(data) {
     var running = 0
     data.forEach(function(d) {
         running += d.count / sum;
-        d.cdf = running;
+        d.cdf = Math.min(1, running);
         return d
     })
     return data
@@ -29,7 +29,18 @@ motApp
 
         $http.get("results/motTestsByVehicleColour.json").success(function(data) {
             var colours = data.sort(function(a, b) { return b.count - a.count })
-            $scope.colours = colours
+            $scope.colours = colours.map(function(x) {
+                if(["not stated", "multi-colour"].indexOf(x.colour) >= 0) {
+                    x.barColour = "white";
+                }
+                else if(x.colour == "cream") {
+                    x.barColour = "#FFFACD";
+                }
+                else {
+                    x.barColour = x.colour;
+                }
+                return x;
+            })
         })
 
 	})

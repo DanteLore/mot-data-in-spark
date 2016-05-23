@@ -6,10 +6,11 @@ var categoryBarChartDirective = function($window, $parse) {
           var exp = $parse(attrs.chartData);
           var dataToPlot = exp(scope)
 
-          var padding = attrs.padding;
+          var padding =  parseInt(attrs.padding);
           var colClass = attrs.colClass;
           var xField = attrs.xfield
           var yField = attrs.yfield
+          var colourField = attrs.colourField
           var xScale, yScale, xAxisGen, yAxisGen, lineFun;
           var dataMin = 0;
           var dataMax = 0;
@@ -20,6 +21,9 @@ var categoryBarChartDirective = function($window, $parse) {
 
           var width = parseInt(svg.style("width"));
           var height = parseInt(svg.style("height"));
+          var yHeight = 0
+          var yCount = 0
+          var barHeight = 0
 
           scope.$watchCollection(exp, function(newVal, oldVal){
             if(newVal) {
@@ -40,13 +44,17 @@ var categoryBarChartDirective = function($window, $parse) {
               dataMin = Math.floor(d3.min(dataToPlot, function (d) { return d[xField]; }))
               dataMax = Math.ceil(d3.max(dataToPlot, function (d) { return d[xField]; }))
 
+              yHeight = height - padding - padding
+              yCount = dataToPlot.length
+              barHeight = (yHeight / yCount) - 4
+
               xScale = d3.scale.linear()
                 .domain([dataMin, dataMax])
-                .range([padding, width - (2 * padding)]);
+                .range([padding, width - (3 * padding)]);
 
-              yScale = d3.scale.linear()
+              yScale = d3.scale.ordinal()
                 .domain(dataToPlot.map(function(d) { return d[yField]; }))
-                .range([padding, height - padding]);
+                .range(dataToPlot.map(function(d, i) { return ((i * yHeight) / yCount) + padding; }) );
 
               xAxisGen = d3.svg.axis()
                 .scale(xScale)
@@ -62,12 +70,12 @@ var categoryBarChartDirective = function($window, $parse) {
           function drawColumnChart() {
               svg.append("svg:g")
                   .attr("class", "x axis")
-                  .attr("transform", "translate(0," + (height - padding) +  ")")
+                  .attr("transform", "translate(" + padding + "," + (height - padding) +  ")")
                   .call(xAxisGen);
 
               svg.append("svg:g")
                   .attr("class", "y axis")
-                  .attr("transform", "translate(" + padding + ",0)")
+                  .attr("transform", "translate(" + padding * 2 + "," + barHeight / 2 + ")")
                   .call(yAxisGen);
 
                 svg.selectAll("rect")
@@ -75,21 +83,26 @@ var categoryBarChartDirective = function($window, $parse) {
                     .enter()
                     .append("rect")
                     .attr("x", function(d, i) {
-                        return padding
+                        return (padding * 2) + 1
                     })
                     .attr("y", function(d, i) {
-                        //var y = i * ((height - padding - padding) / dataToPlot.length)
-
-                        var y = yScale(d[yField])
-                        return y
+                        return yScale(d[yField])
                     })
                     .attr("height", function(d, i) {
-                        return 5
+                        return barHeight
                     })
                     .attr("width", function(d, i) {
                         return xScale(d[xField])
                     })
                     .attr("class", colClass)
+                    .attr("style", function(d, i) {
+                        var style = "fill: " + d[colourField] + ";"
+                        if(d[colourField] == "white") {
+                            style = style + " stroke: black; stroke-width: 1px;"
+                        }
+
+                        return style
+                    })
             }
 
             function redrawColumnChart() {
