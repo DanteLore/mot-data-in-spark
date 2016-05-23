@@ -63,7 +63,50 @@
             <p><a class="btn btn-primary btn-lg" href="http://logicalgenetics.com">Learn more</a></p>
         </div>
         <div class="page-header">
-            <h1>MOT Pass Rate by Vehicle Age</h1>
+            <h1>MOT Stuff</h1>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        By Make&nbsp;&nbsp;
+                        <p style="float: right;">
+                            <input type="text" ng-model="makeFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </p>
+                    </div>
+                    <div class="panel-body">
+                        <ol>
+                            <li ng-repeat="make in passRateByMake | orderBy:'-rate' | filter:searchMake | limitTo: 10" value="{{ make.rank + 1 }}">
+                                <strong>{{ formatRate(make.rate) }}</strong> {{ make.make }}
+                            </li>
+                        </ol>
+                        <p>
+                            Total number of records is <strong>{{ makeCount }}</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        By Make and Model&nbsp;&nbsp;
+                        <p style="float: right;">
+                            <input type="text" ng-model="makeAndModelFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </p>
+                    </div>
+                    <div class="panel-body">
+                        <ol>
+                            <li ng-repeat="mm in passRateByMakeAndModel | orderBy:'-rate' | filter:searchMakeAndModel | limitTo: 10" value="{{ mm.rank + 1 }}">
+                                <strong>{{ formatRate(mm.rate) }}</strong> {{ mm.make }} {{ mm.model }}
+                            </li>
+                        </ol>
+                        <p>
+                            Total number of records is <strong>{{ makeAndModelCount }}</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="row">

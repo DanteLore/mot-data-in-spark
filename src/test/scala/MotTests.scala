@@ -7,6 +7,96 @@ class MotTests extends FlatSpec with Matchers {
   val parquetData = "D:/Data/mot/parquet/UAT_test_results.parquet"
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
 
+  it should "calculate pass rate by make and model" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .withColumn("shortModel", modelToShortModel(col("model")))
+      .groupBy("make", "shortModel")
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .filter("cnt > 1000")
+      .selectExpr("make", "shortModel", "cnt", "passCount * 100 / cnt as rate")
+      .cache()
+
+    println("Best:")
+    results
+      .sort(desc("rate"))
+      .show(10)
+
+    println("Worst:")
+    results
+      .sort(asc("rate"))
+      .show(10)
+
+    val resultMap =
+      results
+        .sort("rate")
+        .map(x => (x.getString(0), x.getString(1), x.getDouble(3)))
+        .collect
+        .reverse
+        .toSeq
+        .zipWithIndex
+        .map({case ((ma, mo, r), i) => new ResultsByMakeAndModel(ma, mo, r, i)} )
+    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMakeAndModel.json")
+  }
+
+  it should "calculate pass rate by make" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .groupBy("make")
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .filter("cnt > 1000")
+      .selectExpr("make", "cnt", "passCount * 100 / cnt as rate")
+      .cache()
+
+    println("Best:")
+    results
+      .sort(desc("rate"))
+      .show(10)
+
+    println("Worst:")
+    results
+      .sort(asc("rate"))
+      .show(10)
+
+    val resultMap =
+      results
+        .sort("rate")
+        .map(x => (x.getString(0), x.getDouble(2)))
+        .collect
+        .reverse
+        .toSeq
+        .zipWithIndex
+        .map({case ((m, r), i) => new ResultsByMake(m, r, i)} )
+    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMake.json")
+  }
+
+  it should "calculate overall pass rate" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .groupBy()
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .selectExpr("passCount * 100 / cnt as rate")
+      .cache()
+
+    results.map(x => x.get(0)).collect().foreach(println)
+  }
+
   it should "find all the car colours" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
@@ -46,62 +136,5 @@ class MotTests extends FlatSpec with Matchers {
       })
       .collect()
     JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByAgeBand.json")
-  }
-
-  it should "calculate pass rate by make and model" in {
-    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
-    motTests.registerTempTable("mot_tests")
-
-    val results = motTests
-      .filter("testClass like '4%'") // Cars, not buses, bikes etc
-      .filter("testType = 'N'") // only interested in the first test
-      .withColumn("passCount", passCodeToInt(col("testResult")))
-      .withColumn("shortModel", modelToShortModel(col("model")))
-      .groupBy("make", "shortModel")
-      .agg(count("*") as "cnt", sum("passCount") as "passCount")
-      .filter("cnt > 1000")
-      .selectExpr("make", "shortModel", "cnt", "passCount * 100 / cnt as rate")
-      .cache()
-
-    println("Best:")
-    results
-      .sort(desc("rate"))
-      .show(10)
-
-    println("Worst:")
-    results
-      .sort(asc("rate"))
-      .show(10)
-
-    val resultMap = results.map(x => (x(0) + " " + x(1), x(3))).collect().toMap
-    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMakeAndModel.json")
-  }
-
-  it should "calculate pass rate by make" in {
-    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
-    motTests.registerTempTable("mot_tests")
-
-    val results = motTests
-      .filter("testClass like '4%'") // Cars, not buses, bikes etc
-      .filter("testType = 'N'") // only interested in the first test
-      .withColumn("passCount", passCodeToInt(col("testResult")))
-      .groupBy("make")
-      .agg(count("*") as "cnt", sum("passCount") as "passCount")
-      .filter("cnt > 1000")
-      .selectExpr("make", "cnt", "passCount * 100 / cnt as rate")
-      .cache()
-
-    println("Best:")
-    results
-      .sort(desc("rate"))
-      .show(10)
-
-    println("Worst:")
-    results
-      .sort(asc("rate"))
-      .show(10)
-
-    val resultMap = results.map(x => (x(0), x(2))).collect().toMap
-    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMake.json")
   }
 }

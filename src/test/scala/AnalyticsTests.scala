@@ -1,15 +1,95 @@
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.scalatest._
 import org.apache.spark.mllib.linalg._
 import org.apache.spark.mllib.regression._
 import org.apache.spark.mllib.evaluation._
 import org.apache.spark.mllib.tree._
+import org.apache.spark.ml.classification._
+import org.apache.spark.ml.evaluation._
+import org.apache.spark.ml.feature.VectorAssembler
 
 class AnalyticsTests extends FlatSpec with Matchers {
   import MotUdfs._
 
   val parquetData = "D:/Data/mot/parquet/UAT_test_results_2011.parquet"
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
+
+  it should "use a neural net to classify pass or fail" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val labelField = "testPassed"
+    val featureFields = Array("testMileage", "cylinderCapacity", "age", "isPetrol", "isDiesel",
+      "isLeylandDaf", "isBedford", "isAustin", "isTalbot", "isLdv", "isRover", "isFord", "isRenault", "isMorris", "isProton",
+      "isMini", "isLexus", "isMcc", "isBentley", "isJaguar", "isPorche", "isToyota", "isSubaru", "isRollsRoyce", "isMercedes")
+
+    val motData = oneHotMotAsDataFrame(motTests, labelField +: featureFields)
+      .withColumnRenamed("testPassed", "label")
+
+    motData.take(10).foreach(println)
+
+    val assembler = new VectorAssembler()
+      .setInputCols(featureFields)
+      .setOutputCol("features")
+
+    val data = assembler.transform(motData).select("features", "label")
+    data.show()
+
+    val Array(trainingData, testData, validationData) = data.randomSplit(Array(0.8, 0.1, 0.1))
+
+    // NOTE: The NN output is "one hot" encoded too - so you need one node in the output layer *per class in the label field*
+
+    val trainer = new MultilayerPerceptronClassifier()
+      .setLayers(Array(25, 30, 10, 2))
+      .setBlockSize(128)
+      .setMaxIter(100)
+
+    val model = trainer.fit(trainingData)
+
+    println(model.getPredictionCol)
+
+    val result = model.transform(validationData)
+    val predictionAndLabels = result.select("prediction", "label")
+    val evaluator = new MulticlassClassificationEvaluator().setMetricName("prediction")
+    println("Precision: " + evaluator.evaluate(predictionAndLabels))
+  }
+
+  it should "build a random forest with one-hot fields for categories" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val labelField = "testPassed"
+    val featureFields = Seq("testMileage", "cylinderCapacity", "age", "isPetrol", "isDiesel",
+      "isLeylandDaf", "isBedford", "isAustin", "isTalbot", "isLdv", "isRover", "isFord", "isRenault", "isMorris", "isProton",
+      "isMini", "isLexus", "isMcc", "isBentley", "isJaguar", "isPorche", "isToyota", "isSubaru", "isRollsRoyce", "isMercedes")
+
+    val labeledPoints = oneHotMotAsFeatures(motTests, labelField, featureFields)
+
+    labeledPoints.take(10).foreach(println)
+
+    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
+    trainingData.cache()
+    testData.cache()
+    validationData.cache()
+
+    //println(s"Training: ${trainingData.count()}, Test: ${testData.count()}, Validation: ${validationData.count()}")
+
+    val model = RandomForest.trainClassifier(trainingData, 2, Map[Int, Int](), 20, "auto", "gini", 8, 500)
+
+    val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
+    val metrics = new MulticlassMetrics(predictionsAndLabels)
+
+    println(s"Precision: ${metrics.precision}")
+
+    println("Confusion Matrix")
+    println(metrics.confusionMatrix)
+
+    println(s"Class: 0, Precision: ${metrics.precision(0.0)}, Recall: ${metrics.recall(0.0)}")
+    println(s"Class: 1, Precision: ${metrics.precision(1.0)}, Recall: ${metrics.recall(1.0)}")
+  }
 
   it should "build a decision tree with category fields" in {
     // Read the data
@@ -89,8 +169,6 @@ class AnalyticsTests extends FlatSpec with Matchers {
     println(s"Class: 1, Precision: ${metrics.precision(1.0)}, Recall: ${metrics.recall(1.0)}")
   }
 
-
-
   it should "build a decision tree with one-hot fields for categories" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
@@ -100,6 +178,46 @@ class AnalyticsTests extends FlatSpec with Matchers {
       "isLeylandDaf", "isBedford", "isAustin", "isTalbot", "isLdv", "isRover", "isFord", "isRenault", "isMorris", "isProton",
       "isMini", "isLexus", "isMcc", "isBentley", "isJaguar", "isPorche", "isToyota", "isSubaru", "isRollsRoyce", "isMercedes")
 
+    val labeledPoints = oneHotMotAsFeatures(motTests, labelField, featureFields)
+
+    labeledPoints.take(10).foreach(println)
+
+    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
+    trainingData.cache()
+    testData.cache()
+    validationData.cache()
+
+    //println(s"Training: ${trainingData.count()}, Test: ${testData.count()}, Validation: ${validationData.count()}")
+
+    val model = DecisionTree.trainClassifier(trainingData, 2, Map[Int, Int](), "gini", 16, 1000)
+
+    val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
+    val metrics = new MulticlassMetrics(predictionsAndLabels)
+
+    println(s"Precision: ${metrics.precision}")
+
+    println("Confusion Matrix")
+    println(metrics.confusionMatrix)
+
+    println(s"Class: 0, Precision: ${metrics.precision(0.0)}, Recall: ${metrics.recall(0.0)}")
+    println(s"Class: 1, Precision: ${metrics.precision(1.0)}, Recall: ${metrics.recall(1.0)}")
+  }
+
+  def oneHotMotAsFeatures(motTests: DataFrame, labelField: String, featureFields: Seq[String]): RDD[LabeledPoint] = {
+    val data: DataFrame = oneHotMotAsDataFrame(motTests, featureFields :+ labelField)
+
+    // Thanks! http://stackoverflow.com/questions/31638770/rdd-to-labeledpoint-conversion
+    val labelIndex = data.columns.indexOf(labelField)
+    val featureIndexes = featureFields.map(data.columns.indexOf(_))
+
+    val labeledPoints = data.map(row => LabeledPoint(
+      row.getDouble(labelIndex),
+      Vectors.dense(featureIndexes.map(row.getDouble).toArray)
+    ))
+    labeledPoints
+  }
+
+  def oneHotMotAsDataFrame(motTests: DataFrame, fields: Seq[String]): DataFrame = {
     val data =
       motTests
         .filter("testClass like '4%'") // Cars, not buses, bikes etc
@@ -137,41 +255,10 @@ class AnalyticsTests extends FlatSpec with Matchers {
         .withColumn("isRollsRoyce", valueToOneOrZero(lit("ROLLS ROYCE"), col("make")))
         .withColumn("isMercedes", valueToOneOrZero(lit("MERCEDES"), col("make")))
 
-        .selectExpr((featureFields :+ labelField).map(x => s"cast($x as double) $x"):_*)
+        .selectExpr(fields.map(x => s"cast($x as double) $x"): _*)
 
     data.printSchema()
     data.show()
-
-    // Thanks! http://stackoverflow.com/questions/31638770/rdd-to-labeledpoint-conversion
-    val labelIndex = data.columns.indexOf(labelField)
-    val featureIndexes = featureFields.map(data.columns.indexOf(_))
-
-    val labeledPoints = data.map(row => LabeledPoint(
-      row.getDouble(labelIndex),
-      Vectors.dense(featureIndexes.map(row.getDouble).toArray)
-    ))
-
-    labeledPoints.take(10).foreach(println)
-
-    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
-    trainingData.cache()
-    testData.cache()
-    validationData.cache()
-
-    //println(s"Training: ${trainingData.count()}, Test: ${testData.count()}, Validation: ${validationData.count()}")
-
-    val model = DecisionTree.trainClassifier(trainingData, 2, Map[Int, Int](), "gini", 16, 1000)
-
-    val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
-    val metrics = new MulticlassMetrics(predictionsAndLabels)
-
-    println(s"Precision: ${metrics.precision}")
-
-    println("Confusion Matrix")
-    println(metrics.confusionMatrix)
-
-    println(s"Class: 0, Precision: ${metrics.precision(0.0)}, Recall: ${metrics.recall(0.0)}")
-    println(s"Class: 1, Precision: ${metrics.precision(1.0)}, Recall: ${metrics.recall(1.0)}")
+    data
   }
-
 }

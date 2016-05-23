@@ -25,7 +25,7 @@ motApp
             cdf = createCdf(sorted)
             $scope.cdf100 = cdf
             $scope.cdf20 = cdf.slice(0, 21)
-        })
+        });
 
         $http.get("results/motTestsByVehicleColour.json").success(function(data) {
             var colours = data.sort(function(a, b) { return b.count - a.count })
@@ -41,7 +41,32 @@ motApp
                 }
                 return x;
             })
-        })
+        });
+
+        $scope.formatRate = d3.format(".1f")
+        $http.get("results/passRateByMake.json").success(function(data) {
+            $scope.passRateByMake = data
+            $scope.makeCount = data.length
+            $scope.searchMake = function(item){
+                if (!$scope.makeFilter || (item.make.toLowerCase().indexOf($scope.makeFilter.toLowerCase()) != -1)) {
+                    return true;
+                }
+                return false;
+             };
+        });
+
+        $scope.formatRate = d3.format(".1f")
+        $http.get("results/passRateByMakeAndModel.json").success(function(data) {
+            $scope.passRateByMakeAndModel = data
+            $scope.makeAndModelCount = data.length
+            $scope.searchMakeAndModel = function(item){
+                if (!$scope.makeAndModelFilter || (item.make.toLowerCase().indexOf($scope.makeAndModelFilter.toLowerCase()) != -1)
+                                               || (item.model.toLowerCase().indexOf($scope.makeAndModelFilter.toLowerCase()) != -1)) {
+                    return true;
+                }
+                return false;
+             };
+        });
 
 	})
 	.directive("categoryBarChart", categoryBarChartDirective)
