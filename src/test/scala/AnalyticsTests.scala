@@ -68,14 +68,14 @@ class AnalyticsTests extends FlatSpec with Matchers {
     println(categoryMap)
 
     // Split the data into three sets
-    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.1, 0.1, 0.1))
+    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
     trainingData.cache()
     testData.cache()
     validationData.cache()
 
     //println(s"Training: ${trainingData.count()}, Test: ${testData.count()}, Validation: ${validationData.count()}")
 
-    val model = DecisionTree.trainClassifier(trainingData, 2, categoryMap, "gini", 10, 100000)
+    val model = DecisionTree.trainClassifier(trainingData, 2, categoryMap, "gini", 16, 1000)
 
     val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
     val metrics = new MulticlassMetrics(predictionsAndLabels)
@@ -153,7 +153,7 @@ class AnalyticsTests extends FlatSpec with Matchers {
 
     labeledPoints.take(10).foreach(println)
 
-    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.1, 0.1, 0.1))
+    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
     trainingData.cache()
     testData.cache()
     validationData.cache()
