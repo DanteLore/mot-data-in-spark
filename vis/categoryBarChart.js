@@ -50,7 +50,7 @@ var categoryBarChartDirective = function($window, $parse) {
 
               xScale = d3.scale.linear()
                 .domain([dataMin, dataMax])
-                .range([padding, width - (3 * padding)]);
+                .range([0, width - (3 * padding)]);
 
               yScale = d3.scale.ordinal()
                 .domain(dataToPlot.map(function(d) { return d[yField]; }))
@@ -70,7 +70,7 @@ var categoryBarChartDirective = function($window, $parse) {
           function drawColumnChart() {
               svg.append("svg:g")
                   .attr("class", "x axis")
-                  .attr("transform", "translate(" + padding + "," + (height - padding) +  ")")
+                  .attr("transform", "translate(" + padding * 2 + "," + (height - padding) +  ")")
                   .call(xAxisGen);
 
               svg.append("svg:g")

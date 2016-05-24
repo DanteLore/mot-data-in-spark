@@ -7,6 +7,55 @@ class MotTests extends FlatSpec with Matchers {
   val parquetData = "D:/Data/mot/parquet/UAT_test_results.parquet"
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
 
+
+  it should "count tests by make and model" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val colours = Spark.sqlContext
+      .sql("select make, model, count(*) as cnt from mot_tests where testClass like '4%' and testType = 'N' group by make, model")
+
+    val results = colours.map(x => new CountsByMakeAndModel(x.getString(0).toLowerCase, x.getString(1).toLowerCase, x.getLong(2))).collect()
+
+    val tree = results
+      .groupBy(_.make)
+      .map({case (key : String, values : Array[CountsByMakeAndModel]) =>
+          new MakeModelTreeItem(key,
+            values.map(_.count).sum,
+            values.map(x => new CountsByModelForTree(x.model, x.count)))
+      })
+
+    JsonWriter.writeToFile(tree, resultsPath + "motTestsByMakeAndModel.json")
+    println(results)
+  }
+
+
+  it should "count tests by colour" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val colours = Spark.sqlContext
+      .sql("select colour as colour, count(*) as cnt from mot_tests where testClass like '4%' and testType = 'N' group by colour")
+
+    val results = colours.map(x => new CountsByColour(x.getString(0).toLowerCase, x.getLong(1))).collect()
+    JsonWriter.writeToFile(results, resultsPath + "motTestsByVehicleColour.json")
+    println(results)
+  }
+
+
+  it should "count tests by make" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val colours = Spark.sqlContext
+      .sql("select make, count(*) as cnt from mot_tests where testClass like '4%' and testType = 'N' group by make")
+
+    val results = colours.map(x => new CountsByMake(x.getString(0).toLowerCase, x.getLong(1))).collect()
+    JsonWriter.writeToFile(results, resultsPath + "motTestsByMake.json")
+    println(results)
+  }
+
+
   it should "calculate pass rate by make and model" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
@@ -40,9 +89,10 @@ class MotTests extends FlatSpec with Matchers {
         .reverse
         .toSeq
         .zipWithIndex
-        .map({case ((ma, mo, r), i) => new ResultsByMakeAndModel(ma, mo, r, i)} )
-    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMakeAndModel.json")
+        .map({case ((ma, mo, r), i) => new RateByMakeAndModel(ma, mo, r, i)} )
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByMakeAndModel.json")
   }
+
 
   it should "calculate pass rate by make" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
@@ -76,9 +126,10 @@ class MotTests extends FlatSpec with Matchers {
         .reverse
         .toSeq
         .zipWithIndex
-        .map({case ((m, r), i) => new ResultsByMake(m, r, i)} )
-    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByMake.json")
+        .map({case ((m, r), i) => new RateByMake(m, r, i)} )
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByMake.json")
   }
+
 
   it should "calculate overall pass rate" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
@@ -97,17 +148,19 @@ class MotTests extends FlatSpec with Matchers {
     results.map(x => x.get(0)).collect().foreach(println)
   }
 
+
   it should "find all the car colours" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
 
     val colours = Spark.sqlContext
-      .sql("select colour as colour, count(*) as cnt from mot_tests group by colour")
+      .sql("select colour as colour, count(*) as cnt from mot_tests where testClass like '4%' and testType = 'N' group by colour")
 
-    val results = colours.map(x => new ResultsByColour(x.getString(0).toLowerCase, x.getLong(1))).collect()
-    JsonWriter.writeMapToFile(results, resultsPath + "motTestsByVehicleColour.json")
+    val results = colours.map(x => new CountsByColour(x.getString(0).toLowerCase, x.getLong(1))).collect()
+    JsonWriter.writeToFile(results, resultsPath + "motTestsByVehicleColour.json")
     println(results)
   }
+
 
   it should "calculate pass rate by age band" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
@@ -129,12 +182,12 @@ class MotTests extends FlatSpec with Matchers {
       .show(101)
 
     val resultMap = results.map({
-      x => new ResultsByAge(
+      x => new RateByAge(
         x.getInt(0),
         x.getLong(1),
         x.getDouble(2))
       })
       .collect()
-    JsonWriter.writeMapToFile(resultMap, resultsPath + "passRateByAgeBand.json")
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByAgeBand.json")
   }
 }

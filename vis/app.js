@@ -12,6 +12,32 @@ var createCdf = function(data) {
     return data
 }
 
+var buildTree = function(data, nameField) {
+    var sum = 0;
+    data.forEach(function(x) { sum = sum + x.count; });
+    var cutOff = sum / 200; // 0.5%
+    var others = data.filter(function(x) { return x.count < cutOff; });
+    var dataToPlot = data.filter(function(x) { return x.count >= cutOff; });
+
+    var othersSum = 0;
+    others.forEach(function(x) { othersSum = othersSum + x.count; });
+    var other = { "count": othersSum, "barColour": "#2b8cbe" };
+    other[nameField] = "other";
+    dataToPlot.push(other);
+
+    dataToPlot = dataToPlot.map(function(d) {
+        if(d.children) {
+            d.children = buildTree(d.children, nameField).children
+        }
+        return d
+    })
+
+    return {
+        "name": "Tree Data",
+        "children": dataToPlot
+    }
+}
+
 motApp
 	.controller('MotController', function($scope, $http) {
 
@@ -27,6 +53,7 @@ motApp
             $scope.cdf20 = cdf.slice(0, 21)
         });
 
+
         $http.get("results/motTestsByVehicleColour.json").success(function(data) {
             var colours = data.sort(function(a, b) { return b.count - a.count })
             $scope.colours = colours.map(function(x) {
@@ -41,6 +68,16 @@ motApp
                 }
                 return x;
             })
+
+            $scope.colourTreeData = buildTree(data, "colour")
+        });
+
+        $http.get("results/motTestsByMake.json").success(function(data) {
+            $scope.makeTreeData = buildTree(data, "make")
+        });
+
+        $http.get("results/motTestsByMakeAndModel.json").success(function(data) {
+            $scope.makeAndModelTreeData = buildTree(data, "name")
         });
 
         $scope.formatRate = d3.format(".1f")
@@ -69,6 +106,7 @@ motApp
         });
 
 	})
+	.directive("treeMapChart", treeMapChartDirective)
 	.directive("categoryBarChart", categoryBarChartDirective)
 	.directive("lineChart", lineChartDirective)
 	.directive("columnChart", columnChartDirective)

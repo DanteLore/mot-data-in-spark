@@ -46,6 +46,19 @@
             background-size: cover;
             background-repeat: no-repeat;
         }
+        .node {
+            stroke: white;
+            stroke-width: 2px;
+            position: absolute;
+            line-height: 12px;
+        }
+        .text {
+            color: black;
+            font: 12px sans-serif;
+            overflow: hidden;
+            text-overflow: hidden;
+            text-indent: 2px;
+        }
     </style>
 </head>
 
@@ -70,14 +83,14 @@
             <div class="col-md-6">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        By Make&nbsp;&nbsp;
+                        Pass Rate by Make&nbsp;&nbsp;
                         <p style="float: right;">
                             <input type="text" ng-model="makeFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                         </p>
                     </div>
                     <div class="panel-body">
                         <ol>
-                            <li ng-repeat="make in passRateByMake | orderBy:'-rate' | filter:searchMake | limitTo: 10" value="{{ make.rank + 1 }}">
+                            <li ng-repeat="make in passRateByMake | orderBy:'-rate' | filter:searchMake | limitTo: 20" value="{{ make.rank + 1 }}">
                                 <strong>{{ formatRate(make.rate) }}</strong> {{ make.make }}
                             </li>
                         </ol>
@@ -88,16 +101,24 @@
                 </div>
             </div>
             <div class="col-md-6">
+                <h3>Test counts by make</h3>
+                <div style="height: 440px" tree-map-chart chart-data="makeTreeData" padding="10" size-field="count" name-field="make" node-class="node"></div>
+                <p>Number of tests by vehicle manufacturer.</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        By Make and Model&nbsp;&nbsp;
+                        Pass Rate by Make and Model&nbsp;&nbsp;
                         <p style="float: right;">
                             <input type="text" ng-model="makeAndModelFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                         </p>
                     </div>
                     <div class="panel-body">
                         <ol>
-                            <li ng-repeat="mm in passRateByMakeAndModel | orderBy:'-rate' | filter:searchMakeAndModel | limitTo: 10" value="{{ mm.rank + 1 }}">
+                            <li ng-repeat="mm in passRateByMakeAndModel | orderBy:'-rate' | filter:searchMakeAndModel | limitTo: 20" value="{{ mm.rank + 1 }}">
                                 <strong>{{ formatRate(mm.rate) }}</strong> {{ mm.make }} {{ mm.model }}
                             </li>
                         </ol>
@@ -107,12 +128,22 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-6">
+                <h3>Test counts by make and model</h3>
+                <div style="height: 440px" tree-map-chart chart-data="makeAndModelTreeData" padding="10" size-field="count" name-field="name" node-class="node"></div>
+                <p>Number of tests by manufacturer and model.</p>
+            </div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
                 <h3>Test counts by vehicle colour</h3>
-                <div style="height: 500px" category-bar-chart chart-data="colours" padding="40" col-class="colourHistoCol" xfield="count" yfield="colour" colour-field="barColour"></div>
+                <div style="height: 500px" category-bar-chart chart-data="colours" padding="40" col-class="colourHistoCol" xfield="count" yfield="colour" colour-field="barColour" ></div>
+                <p>Number of tests for vehicles of various colours.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>Test counts by vehicle colour</h3>
+                <div style="height: 500px" tree-map-chart chart-data="colourTreeData" padding="20" size-field="count" name-field="colour" node-class="node" colour-field="barColour"></div>
                 <p>Number of tests for vehicles of various colours.</p>
             </div>
         </div>
@@ -162,10 +193,11 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-route.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script src="https://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <script src="https://d3js.org/d3.v2.js" charset="utf-8"></script>
     <script src="lineChart.js"></script>
     <script src="columnChart.js"></script>
     <script src="categoryBarChart.js"></script>
+    <script src="treeMapChart.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

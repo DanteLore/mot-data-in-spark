@@ -1,7 +1,15 @@
-case class ResultsByAge(age : Long, count : Long, rate : Double)
+case class RateByAge(age : Long, count : Long, rate : Double)
 
-case class ResultsByColour(colour : String, count : Long)
+case class RateByMake(make : String, rate : Double, rank : Long)
 
-case class ResultsByMake(make : String, rate : Double, rank : Long)
+case class RateByMakeAndModel(make : String, model : String, rate : Double, rank : Long)
 
-case class ResultsByMakeAndModel(make : String, model : String, rate : Double, rank : Long)
+case class CountsByColour(colour : String, count : Long)
+
+case class CountsByMake(make : String, count : Long)
+
+case class CountsByMakeAndModel(make : String, model : String, count : Long)
+
+case class MakeModelTreeItem(name : String, count : Long, children : Seq[CountsByModelForTree])
+
+case class CountsByModelForTree(name : String, count : Long)

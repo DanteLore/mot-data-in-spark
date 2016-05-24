@@ -1,61 +1,61 @@
 [ {
   "colour" : "orange",
-  "count" : 1243462
+  "count" : 789064
 }, {
   "colour" : "pink",
-  "count" : 74698
+  "count" : 48978
 }, {
   "colour" : "red",
-  "count" : 39561424
-}, {
-  "colour" : "white",
-  "count" : 26633492
+  "count" : 28429025
 }, {
   "colour" : "grey",
-  "count" : 20284658
+  "count" : 16033444
+}, {
+  "colour" : "white",
+  "count" : 15820357
 }, {
   "colour" : "turquoise",
-  "count" : 404969
-}, {
-  "colour" : "gold",
-  "count" : 2273256
-}, {
-  "colour" : "maroon",
-  "count" : 602801
-}, {
-  "colour" : "cream",
-  "count" : 182772
+  "count" : 300023
 }, {
   "colour" : "multi-colour",
-  "count" : 216227
+  "count" : 76996
+}, {
+  "colour" : "gold",
+  "count" : 1738515
+}, {
+  "colour" : "maroon",
+  "count" : 394890
+}, {
+  "colour" : "cream",
+  "count" : 119654
 }, {
   "colour" : "not stated",
   "count" : 2
 }, {
   "colour" : "green",
-  "count" : 25902636
+  "count" : 19201289
 }, {
   "colour" : "blue",
-  "count" : 65989969
-}, {
-  "colour" : "bronze",
-  "count" : 383690
+  "count" : 49507547
 }, {
   "colour" : "beige",
-  "count" : 1779885
+  "count" : 1408770
 }, {
-  "colour" : "purple",
-  "count" : 1851088
-}, {
-  "colour" : "brown",
-  "count" : 348074
+  "colour" : "bronze",
+  "count" : 284594
 }, {
   "colour" : "yellow",
-  "count" : 2793848
+  "count" : 1713434
+}, {
+  "colour" : "brown",
+  "count" : 248829
+}, {
+  "colour" : "purple",
+  "count" : 1322443
 }, {
   "colour" : "silver",
-  "count" : 64104827
+  "count" : 50371894
 }, {
   "colour" : "black",
-  "count" : 35693695
+  "count" : 26772987
 } ]
