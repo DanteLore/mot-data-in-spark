@@ -38,7 +38,7 @@ class AnalyticsTests extends FlatSpec with Matchers {
     val data = assembler.transform(motData).select("features", "label")
     data.show()
 
-    val Array(trainingData, testData, validationData) = data.randomSplit(Array(0.8, 0.1, 0.1))
+    val Array(trainingData, testData, validationData) = data.randomSplit(Array(0.1, 0.85, 0.1))
 
     // NOTE: The NN output is "one hot" encoded too - so you need one node in the output layer *per class in the label field*
 
@@ -52,8 +52,9 @@ class AnalyticsTests extends FlatSpec with Matchers {
     println(model.getPredictionCol)
 
     val result = model.transform(validationData)
+    result.show()
     val predictionAndLabels = result.select("prediction", "label")
-    val evaluator = new MulticlassClassificationEvaluator().setMetricName("prediction")
+    val evaluator = new MulticlassClassificationEvaluator().setMetricName("precision")
     println("Precision: " + evaluator.evaluate(predictionAndLabels))
   }
 

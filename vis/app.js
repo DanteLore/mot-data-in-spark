@@ -57,18 +57,31 @@ motApp
         });
 
 
+        var colourMap = {"silver": "#DDD",
+                         "blue": "#1f77b4",
+                         "red": "#d62728",
+                         "black": "#333",
+                         "green": "#2ca02c",
+                         "grey": "#AAA",
+                         "white": "#EEE",
+                         "gold": "#e7ba52",
+                         "yellow": "yellow",
+                         "beige": "#FFFACD",
+                         "purple": "#9467bd",
+                         "orange": "#ff7f0e",
+                         "turquoise": "#17becf",
+                         "bronze": "#cd7f32",
+                         "brown": "#8b4513",
+                         "cream": "#FFFACD",
+                         "multi-colour": "#1f77b4",
+                         "pink": "#de9ed6",
+                         "not stated": "#1f77b4"
+                         }
+
         $http.get("results/motTestsByVehicleColour.json").success(function(data) {
             var colours = data.sort(function(a, b) { return b.count - a.count })
             $scope.colours = colours.map(function(x) {
-                if(["not stated", "multi-colour"].indexOf(x.colour) >= 0) {
-                    x.barColour = "white";
-                }
-                else if(x.colour == "cream") {
-                    x.barColour = "#FFFACD";
-                }
-                else {
-                    x.barColour = x.colour;
-                }
+                x.barColour = colourMap[x.colour];
                 return x;
             })
 
