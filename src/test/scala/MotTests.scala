@@ -12,10 +12,16 @@ class MotTests extends FlatSpec with Matchers {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
 
-    val colours = Spark.sqlContext
-      .sql("select make, model, count(*) as cnt from mot_tests where testClass like '4%' and testType = 'N' group by make, model")
+    val mm = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .withColumn("shortModel", modelToShortModel(col("model")))
+      .groupBy("make", "shortModel")
+      .agg(count("*") as "cnt")
+      .selectExpr("make", "shortModel", "cnt")
+      .cache()
 
-    val results = colours.map(x => new CountsByMakeAndModel(x.getString(0).toLowerCase, x.getString(1).toLowerCase, x.getLong(2))).collect()
+    val results = mm.map(x => new CountsByMakeAndModel(x.getString(0).toLowerCase, x.getString(1).toLowerCase, x.getLong(2))).collect()
 
     val tree = results
       .groupBy(_.make)

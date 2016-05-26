@@ -15,15 +15,17 @@ var createCdf = function(data) {
 var buildTree = function(data, nameField) {
     var sum = 0;
     data.forEach(function(x) { sum = sum + x.count; });
-    var cutOff = sum / 200; // 0.5%
+    var cutOff = sum / 50; // 2%
     var others = data.filter(function(x) { return x.count < cutOff; });
     var dataToPlot = data.filter(function(x) { return x.count >= cutOff; });
 
     var othersSum = 0;
     others.forEach(function(x) { othersSum = othersSum + x.count; });
-    var other = { "count": othersSum, "barColour": "#2b8cbe" };
-    other[nameField] = "other";
-    dataToPlot.push(other);
+    if(othersSum > 0) {
+        var other = { "count": othersSum, "barColour": "#2b8cbe", "children": [] };
+        other[nameField] = "other";
+        dataToPlot.push(other);
+    }
 
     dataToPlot = dataToPlot.map(function(d) {
         if(d.children) {
@@ -33,8 +35,9 @@ var buildTree = function(data, nameField) {
     })
 
     return {
-        "name": "Tree Data",
-        "children": dataToPlot
+        "name": "",
+        "children": dataToPlot,
+        "count": sum
     }
 }
 
