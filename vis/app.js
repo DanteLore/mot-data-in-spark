@@ -12,24 +12,25 @@ var createCdf = function(data) {
     return data
 }
 
-var buildTree = function(data, nameField) {
+var buildTree = function(data, nameField, depth = 1) {
     var sum = 0;
     data.forEach(function(x) { sum = sum + x.count; });
     var cutOff = sum / 50; // 2%
-    var others = data.filter(function(x) { return x.count < cutOff; });
-    var dataToPlot = data.filter(function(x) { return x.count >= cutOff; });
+    var others = data.length > 6 ? data.filter(function(x) { return x.count < cutOff; }) : [];
+    var dataToPlot = data.filter(function(x) { return x.count >= cutOff; })
 
     var othersSum = 0;
     others.forEach(function(x) { othersSum = othersSum + x.count; });
     if(othersSum > 0) {
-        var other = { "count": othersSum, "barColour": "#2b8cbe", "children": [] };
+        var other = { "count": othersSum, "barColour": "#2b8cbe" };
         other[nameField] = "other " + Math.round((othersSum * 100) / sum) + "%";
+        other.children = (depth <= 4) ? buildTree(others, nameField, depth + 1).children : []
         dataToPlot.push(other);
     }
 
     dataToPlot = dataToPlot.map(function(d) {
         if(d.children) {
-            d.children = buildTree(d.children, nameField).children
+            d.children = buildTree(d.children, nameField, depth + 1).children
         }
         return d
     })
