@@ -23,7 +23,7 @@ var buildTree = function(data, nameField) {
     others.forEach(function(x) { othersSum = othersSum + x.count; });
     if(othersSum > 0) {
         var other = { "count": othersSum, "barColour": "#2b8cbe", "children": [] };
-        other[nameField] = "other";
+        other[nameField] = "other " + Math.round((othersSum * 100) / sum) + "%";
         dataToPlot.push(other);
     }
 
@@ -35,7 +35,7 @@ var buildTree = function(data, nameField) {
     })
 
     return {
-        "name": "",
+        "name": "All Data",
         "children": dataToPlot,
         "count": sum
     }
@@ -55,7 +55,6 @@ motApp
             $scope.cdf100 = cdf
             $scope.cdf20 = cdf.slice(0, 21)
         });
-
 
         var colourMap = {"silver": "#DDD",
                          "blue": "#1f77b4",
