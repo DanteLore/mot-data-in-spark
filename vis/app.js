@@ -1,6 +1,6 @@
 var motApp = angular.module('motApp', ['ngRoute']);
 
-var createCdf = function(data) {
+function createCdf(data) {
     var values = data.map(function(d) { return d.count; })
     var sum = d3.sum(values);
     var running = 0
@@ -12,7 +12,11 @@ var createCdf = function(data) {
     return data
 }
 
-var buildTree = function(data, nameField, depth = 1) {
+function toTitleCase(str) {
+    return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+}
+
+function buildTree(data, nameField, depth = 1) {
     var sum = 0;
     data.forEach(function(x) { sum = sum + x.count; });
     var cutOff = sum / 50; // 2%
@@ -23,23 +27,24 @@ var buildTree = function(data, nameField, depth = 1) {
     others.forEach(function(x) { othersSum = othersSum + x.count; });
     if(othersSum > 0) {
         var other = { "count": othersSum, "barColour": "#2b8cbe" };
-        other[nameField] = "other " + Math.round((othersSum * 100) / sum) + "%";
+        other[nameField] = "Other " + Math.round((othersSum * 100) / sum) + "%";
         other.children = (depth <= 4) ? buildTree(others, nameField, depth + 1).children : []
         dataToPlot.push(other);
     }
 
     dataToPlot = dataToPlot.map(function(d) {
+        d[nameField] = toTitleCase(d[nameField])
         if(d.children) {
             d.children = buildTree(d.children, nameField, depth + 1).children
         }
         return d
     })
 
-    return {
-        "name": "All Data",
-        "children": dataToPlot,
-        "count": sum
-    }
+    var x = {}
+    x[nameField] = "All Data";
+    x.children = dataToPlot;
+    x.count = sum;
+    return x;
 }
 
 motApp
@@ -98,7 +103,7 @@ motApp
 
         $scope.formatRate = d3.format(".1f")
         $http.get("results/passRateByMake.json").success(function(data) {
-            $scope.passRateByMake = data
+            $scope.passRateByMake = data.map(function(d) { d.make = toTitleCase(d.make); return d; })
             $scope.makeCount = data.length
             $scope.searchMake = function(item){
                 if (!$scope.makeFilter || (item.make.toLowerCase().indexOf($scope.makeFilter.toLowerCase()) != -1)) {
@@ -110,7 +115,7 @@ motApp
 
         $scope.formatRate = d3.format(".1f")
         $http.get("results/passRateByMakeAndModel.json").success(function(data) {
-            $scope.passRateByMakeAndModel = data
+            $scope.passRateByMakeAndModel = data.map(function(d) { d.model = toTitleCase(d.model); d.make = toTitleCase(d.make); return d; })
             $scope.makeAndModelCount = data.length
             $scope.searchMakeAndModel = function(item){
                 if (!$scope.makeAndModelFilter || (item.make.toLowerCase().indexOf($scope.makeAndModelFilter.toLowerCase()) != -1)

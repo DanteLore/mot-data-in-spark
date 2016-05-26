@@ -80,22 +80,20 @@
 
         <div class="row">
             <div class="col-md-6">
+                <h3>Pass rate by make</h3>
                 <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Pass Rate by Make&nbsp;&nbsp;
-                        <p style="float: right;">
-                            <input type="text" ng-model="makeFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                        </p>
-                    </div>
                     <div class="panel-body">
                         <ol>
-                            <li ng-repeat="make in passRateByMake | orderBy:'-rate' | filter:searchMake | limitTo: 20" value="{{ make.rank + 1 }}">
+                            <li ng-repeat="make in passRateByMake | orderBy:'-rate' | filter:searchMake | limitTo: 16" value="{{ make.rank + 1 }}">
                                 <strong>{{ formatRate(make.rate) }}</strong> {{ make.make }}
                             </li>
                         </ol>
                         <p>
                             Total number of records is <strong>{{ makeCount }}</strong>.
                         </p>
+                    </div>
+                    <div class="panel-footer">
+                        <input type="text" ng-model="makeFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </div>
                 </div>
             </div>
@@ -108,22 +106,20 @@
 
         <div class="row">
             <div class="col-md-6">
+                <h3>Pass rate by make and model</h3>
                 <div class="panel panel-default">
-                    <div class="panel-heading">
-                        Pass Rate by Make and Model&nbsp;&nbsp;
-                        <p style="float: right;">
-                            <input type="text" ng-model="makeAndModelFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                        </p>
-                    </div>
                     <div class="panel-body">
                         <ol>
-                            <li ng-repeat="mm in passRateByMakeAndModel | orderBy:'-rate' | filter:searchMakeAndModel | limitTo: 20" value="{{ mm.rank + 1 }}">
+                            <li ng-repeat="mm in passRateByMakeAndModel | orderBy:'-rate' | filter:searchMakeAndModel | limitTo: 16" value="{{ mm.rank + 1 }}">
                                 <strong>{{ formatRate(mm.rate) }}</strong> {{ mm.make }} {{ mm.model }}
                             </li>
                         </ol>
                         <p>
                             Total number of records is <strong>{{ makeAndModelCount }}</strong>.
                         </p>
+                    </div>
+                    <div class="panel-footer">
+                        <input type="text" ng-model="makeAndModelFilter"/>&nbsp;&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </div>
                 </div>
             </div>
