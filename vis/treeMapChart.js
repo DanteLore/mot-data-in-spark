@@ -2,6 +2,8 @@
 // Much from here: http://bl.ocks.org/davetaz/9954190
 // And here: https://bl.ocks.org/mbostock/4063582
 
+// Transitions: http://alignedleft.com/projects/2014/easy-as-pi/
+
 var treeMapChartDirective = function($window, $parse) {
      return {
      restrict: "EA",
@@ -108,15 +110,18 @@ var treeMapChartDirective = function($window, $parse) {
               current = treeData.parent
 
               svg.selectAll(".treeBits").remove();
-              svg.selectAll(".keyBits").remove();
+              svg.selectAll(".navBits").remove();
 
               if(treeData) {
-                  var keyBits = svg
+                  var navBits = svg
                       .append("g")
-                      .attr("class", "keyBits")
+                      .attr("class", "navBits")
                       .attr("cursor", "pointer")
+                      .attr("cursor", function(d) {
+                         return (current) ? "pointer" : null;
+                      })
 
-                  keyBits
+                  navBits
                       .append("rect")
                       .attr("x", padding)
                       .attr("y", 0)
@@ -125,7 +130,7 @@ var treeMapChartDirective = function($window, $parse) {
                       .style("fill", "white")
                       .on("click", navUp);
 
-                  keyBits
+                  navBits
                       .append("text")
                       .attr("class", "text")
                       .style("font-size", "11pt")
