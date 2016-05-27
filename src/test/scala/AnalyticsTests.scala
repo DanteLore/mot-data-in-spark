@@ -75,9 +75,16 @@ class AnalyticsTests extends FlatSpec with Matchers {
     //val model = DecisionTree.trainClassifier(trainingData, 11, categoryMap, "gini", 8, 1000)
 
     val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
+    predictionsAndLabels.take(10).foreach(println)
     val metrics = new MulticlassMetrics(predictionsAndLabels)
 
+    val error = math.sqrt(predictionsAndLabels.map({ case (v, p) => math.pow(v - p, 2)}).sum() / predictionsAndLabels.count())
+    println(s"Mean Error: $error")
     println(s"Precision: ${metrics.precision}")
+
+    // Weight the mean error by number of MOT tests in each class - it's better to be right about the more common ones!
+    // Error rate CDF (i.e. % of classifications within 1, 2, 3... of correct answer)
+
 
     println("Confusion Matrix")
     println(metrics.confusionMatrix)
