@@ -19,5 +19,9 @@ object MotUdfs {
     Math.min(testYear - firstUseYear, 100)
   })
 
-  val valueToOneOrZero = udf((key : String, fuel : String) => if(key == fuel) 1 else 0)
+  val valueToOneOrZero = udf((key : String, fuel : String) => if(key == fuel) 1.0 else 0.0)
+
+  val passRateToCategory = udf((rowCount : Double, passCount : Double) => Math.floor((passCount / rowCount) * 10))
+
+  val mileageToBand = udf((mileage : Double) => Math.round(mileage / 10000.0) * 10000.0)
 }

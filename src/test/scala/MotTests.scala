@@ -8,6 +8,42 @@ class MotTests extends FlatSpec with Matchers {
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
 
 
+  it should "prepare data for a decision tree to classify probability classes" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val keyFields = Seq("make", "mileageBand", "cylinderCapacity", "age", "isPetrol", "isDiesel")
+
+    val data =
+      motTests
+        .filter("testClass like '4%'") // Cars, not buses, bikes etc
+        .filter("firstUseDate <> 'NULL' and date <> 'NULL'") // Must be able to calculate age
+        .filter("testMileage > 0") // ignore tests where no mileage reported
+        .filter("testType = 'N'") // only interested in the first test
+        .withColumn("testPassed", passCodeToInt(col("testResult")))
+        .withColumn("age", testDateAndVehicleFirstRegDateToAge(col("date"), col("firstUseDate")))
+        .withColumn("isPetrol", valueToOneOrZero(lit("P"), col("fuelType")))
+        .withColumn("isDiesel", valueToOneOrZero(lit("D"), col("fuelType")))
+        .withColumn("mileageBand", mileageToBand(col("testMileage")))
+        .groupBy(keyFields.map(col): _*)
+        .agg(count("*") as "cnt", sum("testPassed") as "passCount")
+        .filter("cnt > 10")
+        .withColumn("passRateCategory", passRateToCategory(col("cnt"), col("passCount")))
+        .selectExpr(keyFields ++ Seq("cnt", "passCount * 100 / cnt as passRate", "passRateCategory"):_*)
+        .cache()
+
+    data.printSchema()
+    data
+      .sort(desc("cnt"))
+      .show()
+
+    data
+      .sort(asc("passRate"))
+      .show()
+
+  }
+
+
   it should "count tests by make and model" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")

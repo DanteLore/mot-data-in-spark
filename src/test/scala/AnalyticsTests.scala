@@ -17,6 +17,79 @@ class AnalyticsTests extends FlatSpec with Matchers {
   val parquetData = "D:/Data/mot/parquet/UAT_test_results_2011.parquet"
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
 
+
+
+
+  it should "use a decision tree to classify probability classes" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val keyFields = Seq("make", "colour", "mileageBand", "cylinderCapacity", "age", "isPetrol", "isDiesel")
+
+    // Get the distinct values for category fields
+    val distinctCategoryValues = Seq("make", "colour")
+      .map(fieldName => (fieldName, motTests.select(col(fieldName)).distinct().map(_.getString(0)).collect().toList)).toMap
+
+    // A UDF to convert a text field into an integer index
+    // Should probably do this before the Parquet file is written
+    val indexInValues = udf((key : String, item : String) => distinctCategoryValues(key).indexOf(item))
+
+    val data =
+      motTests
+        .filter("testClass like '4%'") // Cars, not buses, bikes etc
+        .filter("firstUseDate <> 'NULL' and date <> 'NULL'") // Must be able to calculate age
+        .filter("testMileage > 0") // ignore tests where no mileage reported
+        .filter("testType = 'N'") // only interested in the first test
+        .withColumn("testPassed", passCodeToInt(col("testResult")))
+        .withColumn("age", testDateAndVehicleFirstRegDateToAge(col("date"), col("firstUseDate")))
+        .withColumn("isPetrol", valueToOneOrZero(lit("P"), col("fuelType")))
+        .withColumn("isDiesel", valueToOneOrZero(lit("D"), col("fuelType")))
+        .withColumn("mileageBand", mileageToBand(col("testMileage")))
+        .groupBy(keyFields.map(col): _*)
+        .agg(count("*") as "cnt", sum("testPassed") as "passCount")
+        .filter("cnt > 10")
+        .withColumn("passRateCategory", passRateToCategory(col("cnt"), col("passCount")))
+        .withColumn("make", indexInValues(lit("make"), col("make")))
+        .withColumn("colour", indexInValues(lit("colour"), col("colour")))
+        .selectExpr((keyFields :+ "passRateCategory").map(x => s"cast($x as double) $x"):_*)
+        .cache()
+
+    data.printSchema()
+
+    val labeledPoints = toFeatures(data, "passRateCategory", keyFields)
+
+    labeledPoints.take(10).foreach(println)
+
+    val Array(trainingData, testData, validationData) = labeledPoints.randomSplit(Array(0.8, 0.1, 0.1))
+    trainingData.cache()
+    testData.cache()
+    validationData.cache()
+
+    trainingData.take(10).foreach(println)
+
+    val categoryMap = Seq("make", "colour").map(field => {
+      ( data.columns.indexOf(field), distinctCategoryValues(field).length )
+    }).toMap
+
+    val model = RandomForest.trainClassifier(trainingData, 11, categoryMap, 20, "auto", "gini", 8, 500)
+    //val model = DecisionTree.trainClassifier(trainingData, 11, categoryMap, "gini", 8, 1000)
+
+    val predictionsAndLabels = validationData.map(row => (model.predict(row.features), row.label))
+    val metrics = new MulticlassMetrics(predictionsAndLabels)
+
+    println(s"Precision: ${metrics.precision}")
+
+    println("Confusion Matrix")
+    println(metrics.confusionMatrix)
+
+    for(x <- 0 to 10) {
+      println(s"Class: $x, Precision: ${metrics.precision(x)}, Recall: ${metrics.recall(x)}")
+    }
+  }
+
+
+
+
   it should "use a neural net to classify pass or fail" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
@@ -57,6 +130,7 @@ class AnalyticsTests extends FlatSpec with Matchers {
     val evaluator = new MulticlassClassificationEvaluator().setMetricName("precision")
     println("Precision: " + evaluator.evaluate(predictionAndLabels))
   }
+
 
   it should "build a random forest with one-hot fields for categories" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
@@ -207,6 +281,10 @@ class AnalyticsTests extends FlatSpec with Matchers {
   def oneHotMotAsFeatures(motTests: DataFrame, labelField: String, featureFields: Seq[String]): RDD[LabeledPoint] = {
     val data: DataFrame = oneHotMotAsDataFrame(motTests, featureFields :+ labelField)
 
+    toFeatures(data, labelField, featureFields)
+  }
+
+  def toFeatures(data: DataFrame, labelField: String, featureFields: Seq[String]): RDD[LabeledPoint] ={
     // Thanks! http://stackoverflow.com/questions/31638770/rdd-to-labeledpoint-conversion
     val labelIndex = data.columns.indexOf(labelField)
     val featureIndexes = featureFields.map(data.columns.indexOf(_))
