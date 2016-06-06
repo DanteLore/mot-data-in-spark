@@ -1,5 +1,6 @@
 import java.io.PrintWriter
 
+import org.apache.spark.mllib.evaluation.MulticlassMetrics
 import org.json4s.jackson.Serialization.writePretty
 import org.json4s.{DefaultFormats, Formats}
 
@@ -11,3 +12,5 @@ object JsonWriter {
     new PrintWriter(filename) { write(json); close() }
   }
 }
+
+

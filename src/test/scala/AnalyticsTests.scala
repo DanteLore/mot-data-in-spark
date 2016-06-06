@@ -1,4 +1,3 @@
-import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
@@ -85,16 +84,15 @@ class AnalyticsTests extends FlatSpec with Matchers {
     // Weight the mean error by number of MOT tests in each class - it's better to be right about the more common ones!
     // Error rate CDF (i.e. % of classifications within 1, 2, 3... of correct answer)
 
-
     println("Confusion Matrix")
     println(metrics.confusionMatrix)
+
+    CsvWriter.writeMatrixToFile(metrics.confusionMatrix, resultsPath + "decision-tree-probability-classes-confusion-matrix.csv")
 
     for(x <- 0 to 10) {
       println(s"Class: $x, Precision: ${metrics.precision(x)}, Recall: ${metrics.recall(x)}")
     }
   }
-
-
 
 
   it should "use a neural net to classify pass or fail" in {
