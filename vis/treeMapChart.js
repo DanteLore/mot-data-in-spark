@@ -2,8 +2,6 @@
 // Much from here: http://bl.ocks.org/davetaz/9954190
 // And here: https://bl.ocks.org/mbostock/4063582
 
-// Transitions: http://alignedleft.com/projects/2014/easy-as-pi/
-
 var treeMapChartDirective = function($window, $parse) {
      return {
      restrict: "EA",
@@ -85,43 +83,41 @@ var treeMapChartDirective = function($window, $parse) {
           }
 
           var navDown = function(d) {
-              if(d.children && d.children.length > 0) {
-                  xScale.domain([d.x, d.x + d.dx]);
-                  yScale.domain([d.y, d.y + d.dy]);
-                  drawChart(d);
-              }
-          }
-          var navUp = function() {
-              if(current) {
-                  if(current.x && current.y){
-                      xScale.domain([current.x, current.x + current.dx]);
-                      yScale.domain([current.y, current.y + current.dy]);
-                  }
-                  else {
-                      xScale.domain([0, 1]);
-                      yScale.domain([0, 1]);
-                  }
-
-                  drawChart(current);
-              }
-          }
+                if(d.children && d.children.length > 0) {
+                    xScale.domain([d.x, d.x + d.dx]);
+                    yScale.domain([d.y, d.y + d.dy]);
+                    drawChart(d);
+                }
+             }
 
           function drawChart(treeData) {
               current = treeData.parent
 
               svg.selectAll(".treeBits").remove();
-              svg.selectAll(".navBits").remove();
+              svg.selectAll(".keyBits").remove();
 
               if(treeData) {
-                  var navBits = svg
+                  var keyBits = svg
                       .append("g")
-                      .attr("class", "navBits")
+                      .attr("class", "keyBits")
                       .attr("cursor", "pointer")
-                      .attr("cursor", function(d) {
-                         return (current) ? "pointer" : null;
-                      })
 
-                  navBits
+                  var navUp = function() {
+                      if(current) {
+                          if(current.x && current.y){
+                              xScale.domain([current.x, current.x + current.dx]);
+                              yScale.domain([current.y, current.y + current.dy]);
+                          }
+                          else {
+                              xScale.domain([0, 1]);
+                              yScale.domain([0, 1]);
+                          }
+
+                          drawChart(current);
+                      }
+                  }
+
+                  keyBits
                       .append("rect")
                       .attr("x", padding)
                       .attr("y", 0)
@@ -130,7 +126,7 @@ var treeMapChartDirective = function($window, $parse) {
                       .style("fill", "white")
                       .on("click", navUp);
 
-                  navBits
+                  keyBits
                       .append("text")
                       .attr("class", "text")
                       .style("font-size", "11pt")
@@ -190,8 +186,7 @@ var treeMapChartDirective = function($window, $parse) {
                  })
                  .attr("cursor", function(d) {
                      return (d.children && d.children.length > 0) ? "pointer" : null;
-                 })
-                 .on("click", navDown);
+                 });
             }
         }
     };

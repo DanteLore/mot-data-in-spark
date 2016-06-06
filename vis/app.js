@@ -126,7 +126,13 @@ motApp
              };
         });
 
+        $http.get("results/decision-tree-probability-classes-confusion-matrix.csv").success(function(data) {
+            $scope.confusionMatrix = data.split('\n')
+                .filter(function(line) { return line.length > 0 })
+                .map(function(line) { return line.split(",").map(function(str) { return parseInt(str); }) })
+        });
 	})
+	.directive("heatMatrixChart", heatMatrixChart)
 	.directive("treeMapChart", treeMapChartDirective)
 	.directive("categoryBarChart", categoryBarChartDirective)
 	.directive("lineChart", lineChartDirective)
