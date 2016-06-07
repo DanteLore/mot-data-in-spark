@@ -1,11 +1,60 @@
+import java.io.Serializable
+
 import org.apache.spark.sql.functions._
 import org.scalatest._
 
 class MotTests extends FlatSpec with Matchers {
   import MotUdfs._
 
+  //val parquetData = "D:/Data/mot/parquet/UAT_test_results_2011.parquet"
   val parquetData = "D:/Data/mot/parquet/UAT_test_results.parquet"
   val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
+
+
+  it should "calculate pass rate by age band and make" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results =
+      motTests
+        .filter("testClass like '4%'") // Cars, not buses, bikes etc
+        .filter("testType = 'N'") // only interested in the first test
+        .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
+        .withColumn("passCount", passCodeToInt(col("testResult")))
+        .withColumn("age", testDateAndVehicleFirstRegDateToAge(col("date"), col("firstUseDate")))
+        .groupBy("age", "make")
+        .agg(count("*") as "cnt", sum("passCount") as "passCount")
+        .selectExpr("make", "age", "cnt", "passCount * 100 / cnt as rate")
+        .filter("cnt >= 1000")
+        .rdd
+
+    val resultMap =
+      results
+        .map({
+          x => (
+            x.getString(0),
+            x.getInt(1),
+            x.getLong(2),
+            x.getDouble(3)
+            )
+        })
+
+    val mappedResults =
+      resultMap
+        .groupBy { case (make, age, cnt, rate) => make }
+        .map { case (make, stuff) =>
+          AgeAndMakeResults(make,
+            stuff
+              .map { case (_, age, cnt, rate) => new RateByAge(age, cnt, rate) }
+              .filter(x => x.age >= 3 && x.age <= 20)
+              .toSeq
+          )
+        }
+        .filter(_.series.length >= 18)
+        .collect()
+
+    JsonWriter.writeToFile(mappedResults, resultsPath + "passRateByAgeBandAndMake.json")
+  }
 
 
   it should "prepare data for a decision tree to classify probability classes" in {
@@ -40,7 +89,6 @@ class MotTests extends FlatSpec with Matchers {
     data
       .sort(asc("passRate"))
       .show()
-
   }
 
 

@@ -58,6 +58,30 @@
             overflow: hidden;
             text-indent: 2px;
         }
+        .d3-tip {
+            line-height: 1;
+            font-weight: bold;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 2px;
+        }
+        .d3-tip:after {
+            box-sizing: border-box;
+            display: inline;
+            font-size: 10px;
+            width: 100%;
+            line-height: 1;
+            color: rgba(0, 0, 0, 0.8);
+            content: "\25BC";
+            position: absolute;
+            text-align: center;
+        }
+        .d3-tip.n:after {
+            margin: -1px 0 0 0;
+            top: 100%;
+            left: 0;
+        }
     </style>
 </head>
 
@@ -79,9 +103,18 @@
         </div>
 
         <div class="row">
+            <div class="col-md-12">
+                <h3>Pass Rate By Age and Make</h3>
+                <div style="height: 700px" multi-line-chart chart-data="passRateByAgeAndMake" path-class="passRatePath" padding="20" xfield="age" yfield="rate" nameField="make"></div>
+                <p>Stuff</p>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-6">
                 <h3>Random Forest Confusion Matrix</h3>
-                <div style="height: 440px" heat-matrix-chart chart-data="confusionMatrix" padding="10" node-class="node"></div>
+                <div style="border: 1px solid silver;">
+                    <div style="height: 440px" heat-matrix-chart chart-data="confusionMatrix" padding="0" node-class="node"></div>
+                </div>
             </div>
             <div class="col-md-6">
                 <p style="margin-top:100px">The confusion matrix shows the class predicted by the model (column) versus the actual class of the sample (row).</p>
@@ -202,7 +235,9 @@
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="https://d3js.org/d3.v2.js" charset="utf-8"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script src="lineChart.js"></script>
+    <script src="multiLineChart.js"></script>
     <script src="columnChart.js"></script>
     <script src="categoryBarChart.js"></script>
     <script src="treeMapChart.js"></script>

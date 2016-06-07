@@ -101,6 +101,15 @@ motApp
             $scope.makeAndModelTreeData = buildTree(data, "name")
         });
 
+        $http.get("results/passRateByAgeBandAndMake.json").success(function(data){
+            $scope.passRateByAgeAndMake = data.map(function (d) {
+                return {
+                    "make": d.make,
+                    "series": d.series.sort(function(a, b) { return a.age - b.age; })
+                }
+            })
+        })
+
         $scope.formatRate = d3.format(".1f")
         $http.get("results/passRateByMake.json").success(function(data) {
             $scope.passRateByMake = data.map(function(d) { d.make = toTitleCase(d.make); return d; })
@@ -135,5 +144,6 @@ motApp
 	.directive("heatMatrixChart", heatMatrixChart)
 	.directive("treeMapChart", treeMapChartDirective)
 	.directive("categoryBarChart", categoryBarChartDirective)
+	.directive("multiLineChart", multiLineChartDirective)
 	.directive("lineChart", lineChartDirective)
 	.directive("columnChart", columnChartDirective)

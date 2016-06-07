@@ -33,17 +33,9 @@ var heatMatrixChart = function($window, $parse) {
             }
           });
 
-          Array.prototype.max = function() {
-            return Math.max.apply(null, this);
-          };
-
-          Array.prototype.min = function() {
-            return Math.min.apply(null, this);
-          };
-
           function setChartParameters() {
-              maxValue = matrix.map(function(row) { return row.max() }).max()
-              minValue = matrix.map(function(row) { return row.min() }).min()
+              maxValue = d3.max(matrix.map(function(row) { return d3.max(row) }))
+              minValue = d3.min(matrix.map(function(row) { return d3.min(row) }))
 
               xScale = d3.scale.linear()
                 .domain([0, matrix[0].length])

@@ -83,12 +83,12 @@ var treeMapChartDirective = function($window, $parse) {
           }
 
           var navDown = function(d) {
-                if(d.children && d.children.length > 0) {
-                    xScale.domain([d.x, d.x + d.dx]);
-                    yScale.domain([d.y, d.y + d.dy]);
-                    drawChart(d);
-                }
-             }
+                            if(d.children && d.children.length > 0) {
+                                xScale.domain([d.x, d.x + d.dx]);
+                                yScale.domain([d.y, d.y + d.dy]);
+                                drawChart(d);
+                            }
+                         }
 
           function drawChart(treeData) {
               current = treeData.parent
