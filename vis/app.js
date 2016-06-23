@@ -104,10 +104,10 @@ motApp
         $http.get("results/passRateByAgeBandAndMake.json").success(function(data){
             $scope.passRateByAgeAndMake = data.map(function (d) {
                 return {
-                    "make": d.make,
+                    "make": toTitleCase(d.make),
                     "series": d.series.sort(function(a, b) { return a.age - b.age; })
                 }
-            })
+            }).sort(function(a, b) { return a.make > b.make; })
         })
 
         $scope.formatRate = d3.format(".1f")

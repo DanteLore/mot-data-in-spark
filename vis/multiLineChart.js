@@ -1,3 +1,6 @@
+
+// http://bl.ocks.org/Matthew-Weber/5645518
+
 var multiLineChartDirective = function($window, $parse) {
     return {
      restrict: "EA",
@@ -52,7 +55,7 @@ var multiLineChartDirective = function($window, $parse) {
 
               xScale = d3.scale.linear()
                 .domain([3, 20])
-                .range([padding * 2, width - padding]);
+                .range([padding * 2, width - padding - 200]);
 
               yScale = d3.scale.linear()
                 .domain([yMin, yMax])
@@ -107,20 +110,67 @@ var multiLineChartDirective = function($window, $parse) {
                     .style("stroke", function(d) {
                         return categoryScale(d.make)
                     })
-                    .style("opacity", "0.25")
+                    .style("opacity", "1.0")
                     .on("mouseover", function (d) {
+                        svg.selectAll("." + pathClass)
+                        .style("stroke-width",'4px')
+                        .style("opacity", "0.5")
+
                         d3.select(this)
-                        .style("stroke-width",'6px')
+                        .style("stroke-width",'8px')
                         .style("opacity", "1.0")
 
                         tip.show(d)
                     })
                     .on("mouseout", function (d) {
-                        d3.select(this)
-                        .style("stroke-width","")
-                        .style("opacity", "0.25")
+                        svg.selectAll("." + pathClass)
+                        .style("stroke-width",'4px')
+                        .style("opacity", "1")
+
+                        //d3.select(this)
+                        //.style("stroke-width","")
+                        //.style("opacity", "0.25")
 
                         tip.hide(d)
+                    })
+
+              svg.append("svg:g")
+                 .selectAll("rect")
+                 .data(dataToPlot)
+                 .enter()
+                 .append("rect")
+                    .attr("x", function(d, i) {
+                        return width - 200
+                    })
+                    .attr("y", function(d, i) {
+                        return i * 20
+                    })
+                    .attr("height", function(d) {
+                        return 16
+                    })
+                    .attr("width", function(d) {
+                        return 16
+                    })
+                    .style("fill", function(d) {
+                        return categoryScale(d[nameField])
+                    })
+                    .style("stroke", function(d) {
+                        return categoryScale(d[nameField])
+                    })
+
+              svg.append("svg:g")
+                 .selectAll("rect")
+                 .data(dataToPlot)
+                 .enter()
+                 .append("text")
+                    .attr("x", function(d, i) {
+                        return width - 200 + 24
+                    })
+                    .attr("y", function(d, i) {
+                        return i * 20
+                    })
+                    .text(function(d) {
+                        return d[nameField]
                     })
             }
 
