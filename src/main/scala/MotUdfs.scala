@@ -19,6 +19,18 @@ object MotUdfs {
     Math.min(testYear - firstUseYear, 100)
   })
 
+  val dateToYear = udf((date : String) => {
+    DateTime.parse(date).getYear
+  })
+
+  val dateToMonth = udf((date : String) => {
+    DateTime.parse(date).getDayOfMonth
+  })
+
+  val dateToDay = udf((date : String) => {
+    DateTime.parse(date).getDayOfMonth
+  })
+
   val valueToOneOrZero = udf((key : String, fuel : String) => if(key == fuel) 1.0 else 0.0)
 
   val passRateToCategory = udf((rowCount : Double, passCount : Double) => Math.floor((passCount / rowCount) * 10))

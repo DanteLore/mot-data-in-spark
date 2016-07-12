@@ -6,9 +6,9 @@ import org.scalatest._
 class MotTests extends FlatSpec with Matchers {
   import MotUdfs._
 
-  //val parquetData = "D:/Data/mot/parquet/UAT_test_results_2011.parquet"
-  val parquetData = "D:/Data/mot/parquet/UAT_test_results.parquet"
-  val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
+  //val parquetData = "/Users/DTAYLOR/Data/mot/parquet/UAT_test_results_2011.parquet"
+  val parquetData = "/Users/DTAYLOR/Data/mot/parquet/test_results.parquet"
+  val resultsPath = "/Users/DTAYLOR/Development/mot-data-in-spark/vis/results/"
 
 
   it should "calculate pass rate by age band and make" in {

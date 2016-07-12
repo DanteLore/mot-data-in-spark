@@ -13,8 +13,8 @@ import org.apache.spark.ml.feature.VectorAssembler
 class AnalyticsTests extends FlatSpec with Matchers {
   import MotUdfs._
 
-  val parquetData = "D:/Data/mot/parquet/UAT_test_results_2011.parquet"
-  val resultsPath = "C:/Development/mot-data-in-spark/vis/results/"
+  val parquetData = "/Users/DTAYLOR/Data/mot/parquet/test_results_2011.parquet"
+  val resultsPath = "/Users/DTAYLOR/Development/mot-data-in-spark/vis/results/"
 
 
 
