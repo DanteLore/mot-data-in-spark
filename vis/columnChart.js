@@ -6,13 +6,14 @@ var columnChartDirective = function($window, $parse) {
           var exp = $parse(attrs.chartData);
           var dataToPlot = exp(scope)
 
-          var padding = attrs.padding;
+          var padding = parseInt(attrs.padding);
           var colClass = attrs.colClass;
           var xField = attrs.xfield
           var yField = attrs.yfield
           var xScale, yScale, xAxisGen, yAxisGen, lineFun;
           var dataMin = 0;
           var dataMax = 0;
+          var barWidth = 0;
 
           var d3 = $window.d3;
           var rawSvg = elem.find('svg');
@@ -37,12 +38,14 @@ var columnChartDirective = function($window, $parse) {
           });
 
           function setChartParameters() {
+              barWidth = ((width - padding - padding) / dataToPlot.length) - 2
+
               xMin = Math.floor(d3.min(dataToPlot, function (d) { return d[xField]; }))
               xMax = Math.ceil(d3.max(dataToPlot, function (d) { return d[xField]; }))
 
               xScale = d3.scale.linear()
                 .domain([xMin, xMax])
-                .range([padding, width - padding]);
+                .range([padding + (barWidth / 2) + 2, width - padding]);
 
               dataMin = Math.floor(d3.min(dataToPlot, function (d) { return d[yField]; }))
               dataMax = Math.ceil(d3.max(dataToPlot, function (d) { return d[yField]; }))
@@ -80,13 +83,12 @@ var columnChartDirective = function($window, $parse) {
               //        "class": pathClass
               //    });
 
-
                 svg.selectAll("rect")
                     .data(dataToPlot)
                     .enter()
                     .append("rect")
                     .attr("x", function(d, i) {
-                        return xScale(d[xField])
+                        return xScale(d[xField]) - (barWidth / 2)
                     })
                     .attr("y", function(d, i) {
                         return yScale(d[yField])
@@ -95,7 +97,7 @@ var columnChartDirective = function($window, $parse) {
                         return yScale(dataMin) - yScale(d[yField])
                     })
                     .attr("width", function(d, i) {
-                        return ((width - padding) / dataToPlot.length) - 2
+                        return barWidth
                     })
                     .attr("class", colClass)
             }

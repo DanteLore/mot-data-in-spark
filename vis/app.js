@@ -64,6 +64,7 @@ motApp
 
         $http.get("results/passRateByMileageBand.json").success(function(data) {
             var sorted = data.sort(function(a, b) { return a.mileage - b.mileage; })
+            sorted.forEach(function (row) { row.mileage = row.mileage / 1000; })
             $scope.passRateByMileage100 = sorted
             $scope.passRateByMileage20 = sorted.slice(0, 21)
             var count = 0
