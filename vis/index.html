@@ -191,16 +191,29 @@
 
         <div class="row">
             <div class="col-md-6">
-                <h3>Pass rate histogram for cars aged up to 20 years</h3>
+                <h3>Pass rate by age for cars aged up to 20 years</h3>
                 <div style="height: 300px" column-chart chart-data="passRate20" padding="40" col-class="histoCol" xfield="age" yfield="rate"></div>
                 <p>Pass rate (%) for vehicles of ages 0 - 20 years.  At around 15 years the pass rate reaches a minimum, implying that most cars don't make it to this age.</p>
             </div>
             <div class="col-md-6">
-                <h3>Pass rate histogram for cars aged up to 100 years</h3>
+                <h3>Pass rate by age for cars aged up to 100 years</h3>
                 <div style="height: 300px" column-chart chart-data="passRate100" padding="40" col-class="histoCol" xfield="age" yfield="rate"></div>
                 <p>Pass rate (%) for vehicles aged 0 to 100 years.  As cars get older, they are better cared for, their value increases and they are used less. This may be the cause of the higher pass rates. Note that the pass rate exceeds that for brand new cars somewhere around 60-70 years.</p>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h3>Pass rate by mileage up to 200,000 miles</h3>
+                <div style="height: 300px" column-chart chart-data="passRateByMileage20" padding="40" col-class="histoCol" xfield="mileage" yfield="rate"></div>
+                <p>Pass rate (%) by mileage up to 200,000 miles.</p>
+            </div>
+            <div class="col-md-6">
+                <h3>Pass rate by mileage up to a million miles</h3>
+                <div style="height: 300px" column-chart chart-data="passRateByMileage100" padding="40" col-class="histoCol" xfield="mileage" yfield="rate"></div>
+                <p>Pass rate (%) by mileage up to 1,000,000 miles.</p>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-md-6">
                 <h3>MOT counts by age over first 20 years</h3>
@@ -225,6 +238,7 @@
                 <p>Cumulative distribution of MOT tests for vehicles of ages 0 to 100 years.  The 95th percentile is somewhere around the 15 year mark..</p>
             </div>
         </div>
+
 
     </div>
 

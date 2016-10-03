@@ -62,6 +62,18 @@ motApp
             $scope.cdf20 = cdf.slice(0, 21)
         });
 
+        $http.get("results/passRateByMileageBand.json").success(function(data) {
+            var sorted = data.sort(function(a, b) { return a.mileage - b.mileage; })
+            $scope.passRateByMileage100 = sorted
+            $scope.passRateByMileage20 = sorted.slice(0, 21)
+            var count = 0
+            sorted.forEach(function (row) { count += row.count; })
+            $scope.recordCount = count.toLocaleString()
+            cdf = createCdf(sorted)
+            $scope.cdfByMileage100 = cdf
+            $scope.cdfByMileage20 = cdf.slice(0, 21)
+        });
+
         var colourMap = {"silver": "#DDD",
                          "blue": "#1f77b4",
                          "red": "#d62728",

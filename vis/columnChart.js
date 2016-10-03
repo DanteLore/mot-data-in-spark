@@ -37,8 +37,11 @@ var columnChartDirective = function($window, $parse) {
           });
 
           function setChartParameters() {
+              xMin = Math.floor(d3.min(dataToPlot, function (d) { return d[xField]; }))
+              xMax = Math.ceil(d3.max(dataToPlot, function (d) { return d[xField]; }))
+
               xScale = d3.scale.linear()
-                .domain([-0.5, dataToPlot.length])
+                .domain([xMin, xMax])
                 .range([padding, width - padding]);
 
               dataMin = Math.floor(d3.min(dataToPlot, function (d) { return d[yField]; }))
@@ -83,7 +86,7 @@ var columnChartDirective = function($window, $parse) {
                     .enter()
                     .append("rect")
                     .attr("x", function(d, i) {
-                        return xScale(i - 0.5) + 2
+                        return xScale(d[xField])
                     })
                     .attr("y", function(d, i) {
                         return yScale(d[yField])
@@ -92,7 +95,7 @@ var columnChartDirective = function($window, $parse) {
                         return yScale(dataMin) - yScale(d[yField])
                     })
                     .attr("width", function(d, i) {
-                        return xScale(1) - xScale(0) - 2
+                        return ((width - padding) / dataToPlot.length) - 2
                     })
                     .attr("class", colClass)
             }

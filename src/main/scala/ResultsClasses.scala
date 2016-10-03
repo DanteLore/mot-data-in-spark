@@ -1,5 +1,7 @@
 case class RateByAge(age : Long, count : Long, rate : Double)
 
+case class RateByMileage(mileage : Long, count : Long, rate : Double)
+
 case class RateByAgeAndMake(make : String, age : Long, count : Long, rate : Double)
 
 case class RateByMake(make : String, rate : Double, rank : Long)

@@ -6,9 +6,69 @@ import org.scalatest._
 class MotTests extends FlatSpec with Matchers {
   import MotUdfs._
 
-  //val parquetData = "/Users/DTAYLOR/Data/mot/parquet/UAT_test_results_2011.parquet"
+  //val parquetData = "/Users/DTAYLOR/Data/mot/parquet/test_results_2011.parquet"
   val parquetData = "/Users/DTAYLOR/Data/mot/parquet/test_results.parquet"
   val resultsPath = "/Users/DTAYLOR/Development/mot-data-in-spark/vis/results/"
+
+
+  it should "calculate pass rate by mileage band" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .withColumn("mileageBand", mileageToBand(col("testMileage")))
+      .groupBy("mileageBand")
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .selectExpr("mileageBand", "cnt", "passCount * 100 / cnt as rate")
+      .cache()
+
+    results
+      .sort(asc("mileageBand"))
+      .show(1000)
+
+    val resultMap = results.map({
+      x => new RateByMileage(
+        x.getDouble(0).toLong,
+        x.getLong(1),
+        x.getDouble(2))
+    })
+      .collect()
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByMileageBand.json")
+  }
+
+
+  it should "calculate pass rate by age band" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .withColumn("age", testDateAndVehicleFirstRegDateToAge(col("date"), col("firstUseDate")))
+      .groupBy("age")
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .selectExpr("age", "cnt", "passCount * 100 / cnt as rate")
+      .cache()
+
+    results
+      .sort(asc("age"))
+      .show(101)
+
+    val resultMap = results.map({
+      x => new RateByAge(
+        x.getInt(0),
+        x.getLong(1),
+        x.getDouble(2))
+    })
+      .collect()
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByAgeBand.json")
+  }
 
 
   it should "calculate pass rate by age band and make" in {
@@ -249,35 +309,5 @@ class MotTests extends FlatSpec with Matchers {
     val results = colours.map(x => new CountsByColour(x.getString(0).toLowerCase, x.getLong(1))).collect()
     JsonWriter.writeToFile(results, resultsPath + "motTestsByVehicleColour.json")
     println(results)
-  }
-
-
-  it should "calculate pass rate by age band" in {
-    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
-    motTests.registerTempTable("mot_tests")
-
-    val results = motTests
-      .filter("testClass like '4%'") // Cars, not buses, bikes etc
-      .filter("testType = 'N'") // only interested in the first test
-      .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
-      .withColumn("passCount", passCodeToInt(col("testResult")))
-      .withColumn("age", testDateAndVehicleFirstRegDateToAge(col("date"), col("firstUseDate")))
-      .groupBy("age")
-      .agg(count("*") as "cnt", sum("passCount") as "passCount")
-      .selectExpr("age", "cnt", "passCount * 100 / cnt as rate")
-      .cache()
-
-    results
-      .sort(asc("age"))
-      .show(101)
-
-    val resultMap = results.map({
-      x => new RateByAge(
-        x.getInt(0),
-        x.getLong(1),
-        x.getDouble(2))
-      })
-      .collect()
-    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByAgeBand.json")
   }
 }
