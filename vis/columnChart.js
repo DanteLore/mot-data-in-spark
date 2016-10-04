@@ -62,7 +62,7 @@ var columnChartDirective = function($window, $parse) {
               yAxisGen = d3.svg.axis()
                 .scale(yScale)
                 .orient("left")
-                .ticks(6)
+                .ticks(10)
                 .tickFormat(function(d) {return d3.format(".2s")(d); });
           }
 

@@ -11,6 +11,37 @@ class MotTests extends FlatSpec with Matchers {
   val resultsPath = "/Users/DTAYLOR/Development/mot-data-in-spark/vis/results/"
 
 
+  it should "calculate pass rate by mileage band and age" in {
+    val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
+    motTests.registerTempTable("mot_tests")
+
+    val results = motTests
+      .filter("testClass like '4%'") // Cars, not buses, bikes etc
+      .filter("testType = 'N'") // only interested in the first test
+      .filter("firstUseDate <> 'NULL' and date <> 'NULL'")
+      .withColumn("passCount", passCodeToInt(col("testResult")))
+      .withColumn("mileageBand", mileageToBand(col("testMileage")))
+      .groupBy("age", "mileageBand")
+      .agg(count("*") as "cnt", sum("passCount") as "passCount")
+      .selectExpr("age", "mileageBand", "cnt", "passCount * 100 / cnt as rate")
+      .cache()
+
+    results
+      .sort(asc("age"), asc("mileageBand"))
+      .show(1000)
+
+    val resultMap = results.map({
+      x => RateByAgeAndMileage(
+        x.getInt(0),
+        x.getDouble(1).toLong,
+        x.getLong(2),
+        x.getDouble(3))
+    })
+      .collect()
+    JsonWriter.writeToFile(resultMap, resultsPath + "passRateByAgeAndMileageBand.json")
+  }
+
+
   it should "calculate pass rate by mileage band" in {
     val motTests = Spark.sqlContext.read.parquet(parquetData).toDF()
     motTests.registerTempTable("mot_tests")
